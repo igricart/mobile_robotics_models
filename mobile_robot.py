@@ -13,6 +13,7 @@ class MobileRobot:
             self._theta = state[2]
             self._r = wheel_radius
             self._l = distance_between_wheel_and_rotation_point # distance from robot center of rotation and wheel
+            self._cumulative_dt = 0
         
     def update_local_frame(self, input: np.array) -> np.array:
         # input is velocity on each wheel
@@ -36,6 +37,14 @@ class MobileRobot:
         #print("My odom frame states are:\n",odom_frame_states)
         
         return odom_frame_states
+
+    def update_method_integral(self, input: np.array) -> np.array:
+        # calculating in relation to initial position and formula is considering the whole time
+        self._cumulative_dt += self._dt
+        self._theta = (input[0] - input[1]) * self._cumulative_dt / (self._l * 2)
+        self._x = ((input[0] + input[1]) / (input[0] - input[1])) * self._l * np.sin(self._theta)
+        self._y = ((input[0] + input[1]) / (input[0] - input[1])) * self._l * (np.cos(self._theta) + 1)
+        return np.array([self._x, self._y, self._theta, self._cumulative_dt, self._dt])
 
     @property
     def states(self) -> np.array:
