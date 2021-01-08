@@ -1,7 +1,7 @@
-from rotation import Rotation
+from rotation import LA
 import numpy as np
 class MobileRobot:
-    def __init__(self, state: np.array, dt: float, wheel_radius: float = 1.0, distance_between_wheel_and_rotation_point: float = 1.0) -> None:
+    def __init__(self, state: np.array, dt: float = 0.1, wheel_radius: float = 1.0, distance_between_wheel_and_rotation_point: float = 1.0) -> None:
         if state.size != 3:
             print("Current number of states: ", state.size,". Mobile Robot should have 3 states...")
             exit()
@@ -14,6 +14,7 @@ class MobileRobot:
             self._r = wheel_radius
             self._l = distance_between_wheel_and_rotation_point # distance from robot center of rotation and wheel
             self._cumulative_dt = 0
+            self._first_run = True
         
     def update_local_frame(self, input: np.array) -> np.array:
         # input is velocity on each wheel
@@ -30,8 +31,8 @@ class MobileRobot:
 
     def update(self, input: np.array) -> np.array:
         local_frame_states = self.update_local_frame(input)
-        rot = Rotation(self._theta)
-        odom_frame_states = np.matmul(rot.RotZ3D.transpose(), local_frame_states)
+        rot = LA
+        odom_frame_states = np.matmul(rot.RotZ3D(self, np.deg2rad(self._theta)).transpose(), local_frame_states)
         
         #print("My local frame states are:\n", local_frame_states)
         #print("My odom frame states are:\n",odom_frame_states)
@@ -40,12 +41,19 @@ class MobileRobot:
 
     def update_method_integral(self, input: np.array) -> np.array:
         # calculating in relation to initial position and formula is considering the whole time
-        self._cumulative_dt += self._dt
+        if self._first_run == True:
+            self._first_run = False
+        else:
+            self._cumulative_dt += self._dt
         self._theta = (input[0] - input[1]) * self._cumulative_dt / (self._l * 2)
-        self._x = ((input[0] + input[1]) / (input[0] - input[1])) * self._l * np.sin(self._theta)
-        self._y = ((input[0] + input[1]) / (input[0] - input[1])) * self._l * (np.cos(self._theta) + 1)
-        return np.array([self._x, self._y, self._theta, self._cumulative_dt, self._dt])
+        self._x = (input[0] + input[1]) * self._r * np.cos(self._theta * self._cumulative_dt) / 2
+        self._y = (input[0] + input[1]) * self._r * np.sin(self._theta * self._cumulative_dt) / 2
+        output = np.array([self._x, self._y, self._theta, self._cumulative_dt, self._dt])
+        return output
 
     @property
     def states(self) -> np.array:
         return np.array([self._x, self._y, self._theta, self._dt, self._r, self._l,])
+
+    
+#if __name__ == "__main__":
