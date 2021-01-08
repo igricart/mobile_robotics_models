@@ -84,23 +84,39 @@ class Test(unittest.TestCase):
         #     pass
 
     def test_mobile_robot_update_with_integral_method_initial_pose_different_than_zero(self):
+        print("Move around with non-zero initial pose")
         print("Move around with zero initial pose")
-        # # (v_r - v_l) * t / ( distance_between_wheel_and_rotation_point * 2) = 2 * pi => distance_between_wheel_and_rotation_point = 10 / pi
-        # mr = MobileRobot(np.array([0, 0, 0]), 0.2, 1, 2 / np.pi)
-        # vel_input = np.array([3, 1])
-        # result_x = []
-        # result_y = []
-        # result_theta = []
-        # result_time = []
-        # print ("_x | _y | _theta | _dt | _dt")
-        # for i in range(10):
-        #     i += 1
-        #     output = mr.update_method_integral(vel_input)
-        #     result_x.append(output[0])
-        #     result_y.append(output[1])
-        #     result_theta.append(output[2])
-        #     result_time.append(output[3])
-        #     print(output)
-        #     pass
+        # (v_r - v_l) * t / ( distance_between_wheel_and_rotation_point * 2) = 2 * pi => distance_between_wheel_and_rotation_point = 10 / pi
+        resolution = 20
+        period = 1
+        vel_input = np.array([3, 1])
+        distance_between_wheel_and_rotation_point = (vel_input[0] - vel_input[1]) * period / (4 * np.pi)
+        dt = period / resolution
+        mr = MobileRobot(np.array([1, 1, np.deg2rad(45)]), dt, 1, distance_between_wheel_and_rotation_point)
+        result_x = []
+        result_y = []
+        result_theta = []
+        result_time = []
+        i = 0
+        print ("_x | _y | _theta | _cumulative_dt | _dt")
+        for i in range(resolution + 1):
+            output = mr.update_method_integral(vel_input)
+            result_x.append(output[0])
+            result_y.append(output[1])
+            result_theta.append(output[2])
+            result_time.append(output[3])
+            i += 1
+            print(output)
+            pass
+
+        figure = plt.figure()
+        plt.setp(figure, animated=True)
+        plt.subplot(121)
+        plt.plot(result_x, result_y)
+        plt.xlabel('X value')
+        plt.subplot(122)
+        plt.plot(result_time, result_theta)
+        plt.ylabel('Theta value')
+        plt.show()
 
 unittest.main()
