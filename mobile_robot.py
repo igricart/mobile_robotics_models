@@ -15,7 +15,16 @@ class MobileRobot:
             self._l = distance_between_wheel_and_rotation_point # distance from robot center of rotation and wheel
             self._cumulative_dt = 0
             self._first_run = True
-        
+
+            self._dtheta = 0
+            self._dx = 0
+            self._dy = 0
+            # rot = LA
+            # new_point = np.dot(rot.TransformMatrix2D(self, self._theta, np.array([[-2],[0],[1]])), np.array([[self._x], [self._y], [1]]))
+            # print(new_point)
+            # self._x = new_point[0]
+            # self._y = new_point[1]
+            
     def update_local_frame(self, input: np.array) -> np.array:
         # input is velocity on each wheel
         if input.size == 2:
@@ -43,11 +52,18 @@ class MobileRobot:
         # calculating in relation to initial position and formula is considering the whole time
         if self._first_run == True:
             self._first_run = False
+            self._dx = (input[0] + input[1]) * self._r * np.cos(self._theta) / 2 * self._dt
+            self._x += self._dx
+            self._dy = (input[0] + input[1]) * self._r * np.sin(self._theta) / 2 * self._dt
+            self._y += self._dy
         else:
             self._cumulative_dt += self._dt
-        self._theta = (input[0] - input[1]) * self._cumulative_dt / (self._l * 2)
-        self._x = (input[0] + input[1]) * self._r * np.cos(self._theta * self._cumulative_dt) / 2
-        self._y = (input[0] + input[1]) * self._r * np.sin(self._theta * self._cumulative_dt) / 2
+            self._dtheta = (input[0] - input[1]) / (self._l * 2) * self._dt
+            self._theta += self._dtheta
+            self._dx = (input[0] + input[1]) * self._r * np.cos(self._theta) / 2 * self._dt
+            self._x += self._dx
+            self._dy = (input[0] + input[1]) * self._r * np.sin(self._theta) / 2 * self._dt
+            self._y += self._dy
         output = np.array([self._x, self._y, self._theta, self._cumulative_dt, self._dt])
         return output
 
